@@ -145,7 +145,7 @@ export default class InputRange extends React.Component {
       const distanceToMin = distanceTo(position, positions.min);
       const distanceToMax = distanceTo(position, positions.max);
 
-      if (distanceToMin < distanceToMax) {
+      if (distanceToMin <= distanceToMax) {
         return 'min';
       }
     }
@@ -249,6 +249,29 @@ export default class InputRange extends React.Component {
       min: valueTransformer.getStepValueFromValue(values.min, this.props.step),
       max: valueTransformer.getStepValueFromValue(values.max, this.props.step),
     };
+
+    if (this.swap && this.swap.min) {
+      return this.updateValues({
+        min: this.swap.min,
+        max: transformedValues.min,
+      });
+    }
+    if (this.swap && this.swap.max) {
+      return this.updateValues({
+        min: transformedValues.max,
+        max: this.swap.max,
+      });
+    }
+    if (this.props.value.min === this.props.value.max && (transformedValues.min > transformedValues.max || transformedValues.max < transformedValues.min)) {
+      this.swap = {
+        min: transformedValues.min > transformedValues.max ? this.props.value.min : undefined,
+        max: transformedValues.max < transformedValues.min ? this.props.value.max : undefined,
+      };
+      return this.updateValues({
+        min: transformedValues.max,
+        max: transformedValues.min,
+      });
+    }
 
     this.updateValues(transformedValues);
   }
@@ -483,6 +506,7 @@ export default class InputRange extends React.Component {
    */
   @autobind
   handleInteractionEnd() {
+    this.swap = {};
     if (this.isSliderDragging) {
       this.isSliderDragging = false;
     }
